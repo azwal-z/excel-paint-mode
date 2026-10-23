@@ -44,7 +44,8 @@
     #custom { width: 22px; height: 22px; padding: 0; border: 1px solid var(--border); border-radius: 2px; background: none; cursor: pointer; }
     #current { display: flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--muted); }
     #currentChip { width: 18px; height: 18px; border: 1px solid var(--border); border-radius: 2px; }
-    #error { color: #a4262c; font-size: 11px; margin-top: 10px; }
+    #status { color: var(--muted); font-size: 11px; margin-top: 10px; }
+    #error { color: #a4262c; font-size: 11px; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -70,8 +71,9 @@
     <span id="currentLabel"></span>
   </div>
 
+  <div id="status"></div>
   <div id="error"></div>
 
-  <script src="taskpane.js"></script>
+  <script src="taskpane.js?v=5"></script>
 </body>
 </html>

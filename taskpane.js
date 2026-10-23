@@ -25,6 +25,14 @@ Office.onReady((info) => {
       "Keyboard shortcuts aren't supported in this version of Excel.";
   }
 
+  // Excel's shortcut only fires when the grid has focus; catch it here too for when the panel does.
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "z") {
+      e.preventDefault();
+      paintSelection();
+    }
+  });
+
   buildPalettes();
   document.getElementById("noFill").addEventListener("click", () => setColor(NO_FILL));
   document.getElementById("custom").addEventListener("input", (e) => setColor(e.target.value.toUpperCase()));
@@ -35,13 +43,15 @@ async function paintSelection() {
   try {
     await Excel.run(async (context) => {
       // getSelectedRanges also covers Ctrl+click multi-selections.
-      const fill = context.workbook.getSelectedRanges().format.fill;
+      const ranges = context.workbook.getSelectedRanges();
+      ranges.load("address");
       if (currentColor === NO_FILL) {
-        fill.clear();
+        ranges.format.fill.clear();
       } else {
-        fill.color = currentColor;
+        ranges.format.fill.color = currentColor;
       }
       await context.sync();
+      showStatus("Filled " + ranges.address.replace(/[^,!]*!/g, "") + " at " + new Date().toLocaleTimeString());
     });
     showError("");
   } catch (e) {
@@ -159,6 +169,10 @@ function render() {
     label.textContent = "Fill colour: " + currentColor;
     document.getElementById("custom").value = currentColor;
   }
+}
+
+function showStatus(message) {
+  document.getElementById("status").textContent = message;
 }
 
 function showError(message) {
