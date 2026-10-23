@@ -11,7 +11,6 @@
       --text: #1f1f1f;
       --muted: #616161;
       --border: #d1d1d1;
-      --accent: #107c41;
     }
     body {
       margin: 0;
@@ -20,17 +19,7 @@
       color: var(--text);
       font: 13px "Segoe UI", system-ui, sans-serif;
     }
-    #apply {
-      width: 100%;
-      padding: 10px;
-      border: 0;
-      border-radius: 6px;
-      font: 600 14px "Segoe UI", system-ui, sans-serif;
-      color: #fff;
-      background: var(--accent);
-      cursor: pointer;
-    }
-    #hint { margin: 4px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
+    #hint { margin: 0; color: var(--muted); font-size: 12px; }
     h2 { font-size: 11px; font-weight: 600; margin: 14px 0 6px; color: var(--muted); }
     .grid { display: grid; grid-template-columns: repeat(10, 18px); gap: 3px; }
     .grid.theme .swatch:nth-child(-n+10) { margin-bottom: 4px; }
@@ -59,8 +48,7 @@
   </style>
 </head>
 <body>
-  <button id="apply" type="button">Fill selection</button>
-  <p id="hint">Select cells, then press Ctrl + Shift + Z</p>
+  <p id="hint">Pick a colour, then press Ctrl + Shift + Z on any cell</p>
 
   <h2>Theme colours</h2>
   <div id="themeGrid" class="grid theme"></div>

@@ -22,11 +22,10 @@ Office.onReady((info) => {
     Office.actions.associate("APPLYFILL", paintSelection);
   } catch (e) {
     document.getElementById("hint").textContent =
-      "Keyboard shortcuts aren't supported in this version of Excel. Use the button above.";
+      "Keyboard shortcuts aren't supported in this version of Excel.";
   }
 
   buildPalettes();
-  document.getElementById("apply").addEventListener("click", paintSelection);
   document.getElementById("noFill").addEventListener("click", () => setColor(NO_FILL));
   document.getElementById("custom").addEventListener("input", (e) => setColor(e.target.value.toUpperCase()));
   render();
