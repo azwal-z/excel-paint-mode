@@ -1,4 +1,4 @@
-// Paint Mode: while on, every cell/range you select gets filled with the chosen colour.
+// Paint Mode: Ctrl+Shift+Z fills the current selection with the chosen colour.
 
 const NO_FILL = "none";
 
@@ -13,37 +13,24 @@ const STANDARD_COLORS = [
   "#00B050", "#00B0F0", "#0070C0", "#002060", "#7030A0",
 ];
 
-let paintOn = false;
 let currentColor = loadColor();
 
 Office.onReady((info) => {
   if (info.host !== Office.HostType.Excel) return;
 
   try {
-    Office.actions.associate("TOGGLEPAINTMODE", togglePaintMode);
+    Office.actions.associate("APPLYFILL", paintSelection);
   } catch (e) {
     document.getElementById("hint").textContent =
       "Keyboard shortcuts aren't supported in this version of Excel. Use the button above.";
   }
 
-  Office.context.document.addHandlerAsync(
-    Office.EventType.DocumentSelectionChanged,
-    () => { if (paintOn) paintSelection(); }
-  );
-
   buildPalettes();
-  document.getElementById("toggle").addEventListener("click", togglePaintMode);
+  document.getElementById("apply").addEventListener("click", paintSelection);
   document.getElementById("noFill").addEventListener("click", () => setColor(NO_FILL));
   document.getElementById("custom").addEventListener("input", (e) => setColor(e.target.value.toUpperCase()));
   render();
 });
-
-function togglePaintMode() {
-  paintOn = !paintOn;
-  render();
-  // Turning on also paints whatever is already selected.
-  if (paintOn) paintSelection();
-}
 
 async function paintSelection() {
   try {
@@ -157,10 +144,6 @@ function loadColor() {
 }
 
 function render() {
-  const toggle = document.getElementById("toggle");
-  toggle.textContent = paintOn ? "Paint mode: ON" : "Paint mode: OFF";
-  toggle.classList.toggle("on", paintOn);
-
   for (const swatch of document.querySelectorAll(".swatch")) {
     swatch.classList.toggle("selected", swatch.dataset.color === currentColor);
   }
@@ -170,11 +153,11 @@ function render() {
   if (currentColor === NO_FILL) {
     chip.className = "nofill";
     chip.style.background = "";
-    label.textContent = "Painting with: No fill";
+    label.textContent = "Fill colour: No fill";
   } else {
     chip.className = "";
     chip.style.background = currentColor;
-    label.textContent = "Painting with: " + currentColor;
+    label.textContent = "Fill colour: " + currentColor;
     document.getElementById("custom").value = currentColor;
   }
 }

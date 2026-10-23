@@ -1,14 +1,14 @@
 {
   "actions": [
     {
-      "id": "TOGGLEPAINTMODE",
+      "id": "APPLYFILL",
       "type": "ExecuteFunction",
-      "name": "Toggle paint mode"
+      "name": "Fill selection with chosen colour"
     }
   ],
   "shortcuts": [
     {
-      "action": "TOGGLEPAINTMODE",
+      "action": "APPLYFILL",
       "key": {
         "default": "Ctrl+Shift+Z"
       }
