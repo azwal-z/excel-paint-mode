@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Paint Mode</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1f1f1f;
+      --muted: #616161;
+      --border: #d1d1d1;
+      --on: #107c41;
+      --off: #8a8886;
+    }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px "Segoe UI", system-ui, sans-serif;
+    }
+    h2 { font-size: 13px; font-weight: 600; margin: 20px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    #toggle {
+      width: 100%;
+      padding: 14px;
+      border: 0;
+      border-radius: 6px;
+      font: 600 16px "Segoe UI", system-ui, sans-serif;
+      color: #fff;
+      background: var(--off);
+      cursor: pointer;
+    }
+    #toggle.on { background: var(--on); }
+    #hint { margin: 6px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+    #palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .swatch {
+      aspect-ratio: 1;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0;
+    }
+    .swatch.selected { outline: 3px solid var(--text); outline-offset: 1px; }
+    .nofill {
+      background: linear-gradient(to top right, #fff 46%, #d13438 46%, #d13438 54%, #fff 54%);
+    }
+    #customRow { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    #custom { width: 44px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: 4px; background: none; cursor: pointer; }
+    #current { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+    #currentChip { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 4px; }
+    #error { color: #a4262c; font-size: 12px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <button id="toggle" type="button">Paint mode: OFF</button>
+  <p id="hint">Shortcut: Ctrl + Alt + P</p>
+
+  <h2>Colour</h2>
+  <div id="palette"></div>
+  <div id="customRow">
+    <input id="custom" type="color" value="#FFFF00" aria-label="Custom colour">
+    <label for="custom">Custom colour</label>
+  </div>
+
+  <div id="current">
+    <div id="currentChip"></div>
+    <span id="currentLabel"></span>
+  </div>
+
+  <div id="error"></div>
+
+  <script src="taskpane.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "actions": [
+    {
+      "id": "TOGGLEPAINTMODE",
+      "type": "ExecuteFunction",
+      "name": "Toggle paint mode"
+    }
+  ],
+  "shortcuts": [
+    {
+      "action": "TOGGLEPAINTMODE",
+      "key": {
+        "default": "Ctrl+Alt+P"
+      }
+    }
+  ]
+}
