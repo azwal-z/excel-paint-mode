@@ -46,6 +46,8 @@
     #currentChip { width: 18px; height: 18px; border: 1px solid var(--border); border-radius: 2px; }
     #status { color: var(--muted); font-size: 11px; margin-top: 10px; }
     #error { color: #a4262c; font-size: 11px; margin-top: 4px; }
+    #hint.warn { color: #a4262c; }
+    #version { color: var(--muted); font-size: 10px; margin-top: 16px; opacity: .7; }
   </style>
 </head>
 <body>
@@ -73,7 +75,8 @@
 
   <div id="status"></div>
   <div id="error"></div>
+  <div id="version"></div>
 
-  <script src="taskpane.js?v=5"></script>
+  <script src="taskpane.js?v=6"></script>
 </body>
 </html>

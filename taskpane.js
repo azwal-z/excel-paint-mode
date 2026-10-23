@@ -13,17 +13,23 @@ const STANDARD_COLORS = [
   "#00B050", "#00B0F0", "#0070C0", "#002060", "#7030A0",
 ];
 
+const VERSION = "v6";
+
 let currentColor = loadColor();
+
+// Registered at load time (as in Microsoft's sample), not inside onReady.
+let associateError = null;
+try {
+  Office.actions.associate("APPLYFILL", paintSelection);
+} catch (e) {
+  associateError = e;
+}
 
 Office.onReady((info) => {
   if (info.host !== Office.HostType.Excel) return;
 
-  try {
-    Office.actions.associate("APPLYFILL", paintSelection);
-  } catch (e) {
-    document.getElementById("hint").textContent =
-      "Keyboard shortcuts aren't supported in this version of Excel.";
-  }
+  document.getElementById("version").textContent = "Paint Mode " + VERSION;
+  showShortcutState();
 
   // Excel's shortcut only fires when the grid has focus; catch it here too for when the panel does.
   document.addEventListener("keydown", (e) => {
@@ -38,6 +44,29 @@ Office.onReady((info) => {
   document.getElementById("custom").addEventListener("input", (e) => setColor(e.target.value.toUpperCase()));
   render();
 });
+
+// Shows the key Excel has actually assigned to this add-in, which can differ from shortcuts.json
+// if Excel's own command won a conflict.
+async function showShortcutState() {
+  const hint = document.getElementById("hint");
+  if (associateError) {
+    hint.textContent = "Keyboard shortcuts aren't supported in this version of Excel (" + associateError.message + ").";
+    return;
+  }
+  try {
+    const key = (await Office.actions.getShortcuts()).APPLYFILL;
+    if (key) {
+      hint.textContent = "Pick a colour, then press " + key + " on any cell";
+    } else {
+      hint.textContent =
+        "Excel has given Ctrl+Shift+Z to its own command, not Paint Mode. Type \"Reset Office Add-ins shortcut preferences\" " +
+        "in Excel's search box at the top and run it, then press Ctrl+Shift+Z on a cell and choose Paint Mode.";
+      hint.classList.add("warn");
+    }
+  } catch (e) {
+    hint.textContent = "Pick a colour, then press Ctrl + Shift + Z on any cell (couldn't confirm shortcut: " + e.message + ")";
+  }
+}
 
 async function paintSelection() {
   try {
