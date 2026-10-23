@@ -16,52 +16,67 @@
     }
     body {
       margin: 0;
-      padding: 16px;
+      padding: 12px;
       background: var(--bg);
       color: var(--text);
-      font: 14px "Segoe UI", system-ui, sans-serif;
+      font: 13px "Segoe UI", system-ui, sans-serif;
     }
-    h2 { font-size: 13px; font-weight: 600; margin: 20px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
     #toggle {
       width: 100%;
-      padding: 14px;
+      padding: 10px;
       border: 0;
       border-radius: 6px;
-      font: 600 16px "Segoe UI", system-ui, sans-serif;
+      font: 600 14px "Segoe UI", system-ui, sans-serif;
       color: #fff;
       background: var(--off);
       cursor: pointer;
     }
     #toggle.on { background: var(--on); }
-    #hint { margin: 6px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
-    #palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    #hint { margin: 4px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
+    h2 { font-size: 11px; font-weight: 600; margin: 14px 0 6px; color: var(--muted); }
+    .grid { display: grid; grid-template-columns: repeat(10, 18px); gap: 3px; }
+    .grid.theme .swatch:nth-child(-n+10) { margin-bottom: 4px; }
     .swatch {
-      aspect-ratio: 1;
+      width: 18px;
+      height: 18px;
       border: 1px solid var(--border);
-      border-radius: 4px;
-      cursor: pointer;
+      border-radius: 2px;
       padding: 0;
+      cursor: pointer;
     }
-    .swatch.selected { outline: 3px solid var(--text); outline-offset: 1px; }
+    .swatch:hover { outline: 1px solid var(--text); }
+    .swatch.selected { outline: 2px solid var(--text); outline-offset: 1px; }
     .nofill {
-      background: linear-gradient(to top right, #fff 46%, #d13438 46%, #d13438 54%, #fff 54%);
+      background: linear-gradient(to top right, #fff 45%, #d13438 45%, #d13438 55%, #fff 55%);
     }
-    #customRow { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
-    #custom { width: 44px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: 4px; background: none; cursor: pointer; }
-    #current { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
-    #currentChip { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 4px; }
-    #error { color: #a4262c; font-size: 12px; margin-top: 12px; }
+    #extras { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+    #extras label, #extras button.text {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer;
+    }
+    #custom { width: 22px; height: 22px; padding: 0; border: 1px solid var(--border); border-radius: 2px; background: none; cursor: pointer; }
+    #current { display: flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--muted); }
+    #currentChip { width: 18px; height: 18px; border: 1px solid var(--border); border-radius: 2px; }
+    #error { color: #a4262c; font-size: 11px; margin-top: 10px; }
   </style>
 </head>
 <body>
   <button id="toggle" type="button">Paint mode: OFF</button>
-  <p id="hint">Shortcut: Ctrl + Alt + P</p>
+  <p id="hint">Shortcut: Ctrl + Shift + Z</p>
 
-  <h2>Colour</h2>
-  <div id="palette"></div>
-  <div id="customRow">
-    <input id="custom" type="color" value="#FFFF00" aria-label="Custom colour">
-    <label for="custom">Custom colour</label>
+  <h2>Theme colours</h2>
+  <div id="themeGrid" class="grid theme"></div>
+
+  <h2>Standard colours</h2>
+  <div id="standardGrid" class="grid"></div>
+
+  <div id="extras">
+    <button id="noFill" class="text" type="button">
+      <span class="swatch nofill" data-color="none"></span>No fill
+    </button>
+    <label>
+      <input id="custom" type="color" value="#FFFF00">More colours
+    </label>
   </div>
 
   <div id="current">

@@ -10,7 +10,7 @@
     {
       "action": "TOGGLEPAINTMODE",
       "key": {
-        "default": "Ctrl+Alt+P"
+        "default": "Ctrl+Shift+Z"
       }
     }
   ]
