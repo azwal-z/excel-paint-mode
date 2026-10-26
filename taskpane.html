@@ -19,7 +19,7 @@
       color: var(--text);
       font: 13px "Segoe UI", system-ui, sans-serif;
     }
-    #hint { margin: 0; color: var(--muted); font-size: 12px; }
+    .hint { margin: 0; color: var(--muted); font-size: 12px; }
     h2 { font-size: 11px; font-weight: 600; margin: 14px 0 6px; color: var(--muted); }
     .grid { display: grid; grid-template-columns: repeat(10, 18px); gap: 3px; }
     .grid.theme .swatch:nth-child(-n+10) { margin-bottom: 4px; }
@@ -46,12 +46,13 @@
     #currentChip { width: 18px; height: 18px; border: 1px solid var(--border); border-radius: 2px; }
     #status { color: var(--muted); font-size: 11px; margin-top: 10px; }
     #error { color: #a4262c; font-size: 11px; margin-top: 4px; }
-    #hint.warn { color: #a4262c; }
+    .hint.warn { color: #a4262c; }
+    #joinHeading { margin-top: 20px; }
     #version { color: var(--muted); font-size: 10px; margin-top: 16px; opacity: .7; }
   </style>
 </head>
 <body>
-  <p id="hint">Pick a colour, then press Ctrl + Shift + Z on any cell</p>
+  <p id="hint" class="hint">Pick a colour, then press Ctrl + Shift + Z on any cell</p>
 
   <h2>Theme colours</h2>
   <div id="themeGrid" class="grid theme"></div>
@@ -73,10 +74,14 @@
     <span id="currentLabel"></span>
   </div>
 
+  <h2 id="joinHeading">Join split rows</h2>
+  <p id="joinHint" class="hint">Select the cells of a column whose text spilled onto extra rows, then press Ctrl + Shift + W.
+    Rows with values only in that column are added to the row above and deleted.</p>
+
   <div id="status"></div>
   <div id="error"></div>
   <div id="version"></div>
 
-  <script src="taskpane.js?v=6"></script>
+  <script src="taskpane.js?v=7"></script>
 </body>
 </html>

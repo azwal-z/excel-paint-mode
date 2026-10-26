@@ -4,6 +4,11 @@
       "id": "APPLYFILL",
       "type": "ExecuteFunction",
       "name": "Fill selection with chosen colour"
+    },
+    {
+      "id": "JOINROWS",
+      "type": "ExecuteFunction",
+      "name": "Join split rows in the selected column"
     }
   ],
   "shortcuts": [
@@ -11,6 +16,12 @@
       "action": "APPLYFILL",
       "key": {
         "default": "Ctrl+Shift+Z"
+      }
+    },
+    {
+      "action": "JOINROWS",
+      "key": {
+        "default": "Ctrl+Shift+W"
       }
     }
   ]

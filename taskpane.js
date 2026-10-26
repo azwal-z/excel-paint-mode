@@ -1,4 +1,5 @@
 // Paint Mode: Ctrl+Shift+Z fills the current selection with the chosen colour.
+// Ctrl+Shift+W joins rows that spilled over in the selected column back into the row above.
 
 const NO_FILL = "none";
 
@@ -13,7 +14,7 @@ const STANDARD_COLORS = [
   "#00B050", "#00B0F0", "#0070C0", "#002060", "#7030A0",
 ];
 
-const VERSION = "v6";
+const VERSION = "v7";
 
 let currentColor = loadColor();
 
@@ -21,6 +22,7 @@ let currentColor = loadColor();
 let associateError = null;
 try {
   Office.actions.associate("APPLYFILL", paintSelection);
+  Office.actions.associate("JOINROWS", joinSplitRows);
 } catch (e) {
   associateError = e;
 }
@@ -31,11 +33,16 @@ Office.onReady((info) => {
   document.getElementById("version").textContent = "Paint Mode " + VERSION;
   showShortcutState();
 
-  // Excel's shortcut only fires when the grid has focus; catch it here too for when the panel does.
+  // Excel's shortcuts only fire when the grid has focus; catch them here too for when the panel does.
   document.addEventListener("keydown", (e) => {
-    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "z") {
+    if (!e.ctrlKey || !e.shiftKey) return;
+    const key = e.key.toLowerCase();
+    if (key === "z") {
       e.preventDefault();
       paintSelection();
+    } else if (key === "w") {
+      e.preventDefault();
+      joinSplitRows();
     }
   });
 
@@ -48,24 +55,36 @@ Office.onReady((info) => {
 // Shows the key Excel has actually assigned to this add-in, which can differ from shortcuts.json
 // if Excel's own command won a conflict.
 async function showShortcutState() {
-  const hint = document.getElementById("hint");
+  const fillHint = document.getElementById("hint");
+  const joinHint = document.getElementById("joinHint");
   if (associateError) {
-    hint.textContent = "Keyboard shortcuts aren't supported in this version of Excel (" + associateError.message + ").";
+    fillHint.textContent = "Keyboard shortcuts aren't supported in this version of Excel (" + associateError.message + ").";
+    joinHint.textContent = "";
     return;
   }
   try {
-    const key = (await Office.actions.getShortcuts()).APPLYFILL;
-    if (key) {
-      hint.textContent = "Pick a colour, then press " + key + " on any cell";
-    } else {
-      hint.textContent =
-        "Excel has given Ctrl+Shift+Z to its own command, not Paint Mode. Type \"Reset Office Add-ins shortcut preferences\" " +
-        "in Excel's search box at the top and run it, then press Ctrl+Shift+Z on a cell and choose Paint Mode.";
-      hint.classList.add("warn");
-    }
+    const keys = await Office.actions.getShortcuts();
+    describeShortcut(fillHint, keys.APPLYFILL, "Ctrl+Shift+Z", "Pick a colour, then press KEY on any cell");
+    describeShortcut(joinHint, keys.JOINROWS, "Ctrl+Shift+W",
+      "Select the cells of a column whose text spilled onto extra rows, then press KEY. " +
+      "Rows with values only in that column are added to the row above and deleted.");
   } catch (e) {
-    hint.textContent = "Pick a colour, then press Ctrl + Shift + Z on any cell (couldn't confirm shortcut: " + e.message + ")";
+    fillHint.textContent += " (couldn't confirm shortcuts: " + e.message + ")";
   }
+}
+
+// key is null when Excel's own command won a conflict, and missing when Excel is still
+// using an older cached shortcuts.json that doesn't have this action yet.
+function describeShortcut(el, key, expected, text) {
+  if (key) {
+    el.textContent = text.replace("KEY", key);
+    return;
+  }
+  el.textContent = key === null
+    ? "Excel has given " + expected + " to its own command, not Paint Mode. Type \"Reset Office Add-ins shortcut preferences\" " +
+      "in Excel's search box at the top and run it, then press " + expected + " on a cell and choose Paint Mode."
+    : "Excel hasn't loaded the " + expected + " shortcut yet. Close Excel, run the Paint Mode installer again, then reopen Excel.";
+  el.classList.add("warn");
 }
 
 async function paintSelection() {
@@ -87,6 +106,109 @@ async function paintSelection() {
     // e.g. a chart or shape is selected, so there is no cell range to paint.
     showError(e.message);
   }
+}
+
+async function joinSplitRows() {
+  try {
+    await Excel.run(async (context) => {
+      const sheet = context.workbook.worksheets.getActiveWorksheet();
+      const selection = context.workbook.getSelectedRange(); // throws for Ctrl+click multi-selections
+      const used = sheet.getUsedRange(true);
+      selection.load("rowIndex,rowCount,columnIndex,columnCount");
+      used.load("rowIndex,rowCount,columnIndex,columnCount");
+      await context.sync();
+
+      // Trim whole-column selections to the data.
+      const usedBottom = used.rowIndex + used.rowCount - 1;
+      const usedRight = used.columnIndex + used.columnCount - 1;
+      const top = Math.max(selection.rowIndex, used.rowIndex);
+      const bottom = Math.min(selection.rowIndex + selection.rowCount - 1, usedBottom);
+      const selLeft = Math.max(selection.columnIndex, used.columnIndex);
+      const selRight = Math.min(selection.columnIndex + selection.columnCount - 1, usedRight);
+      if (top > bottom || selLeft > selRight) {
+        showStatus("Nothing to join: the selected cells are empty.");
+        showError("");
+        return;
+      }
+      if (selLeft === used.columnIndex && selRight === usedRight) {
+        throw new Error("Select cells in just the column that spilled over, not every column.");
+      }
+
+      // Read whole rows, since a row is only deleted if everything outside the selected column is
+      // blank. The row above the selection is read too, so selecting just the spilled-over cells works.
+      const first = Math.max(top - 1, used.rowIndex);
+      const block = sheet.getRangeByIndexes(first, used.columnIndex, bottom - first + 1, used.columnCount);
+      block.load("values");
+      await context.sync();
+
+      const { writes, deletes } = planJoin(block.values, selLeft - used.columnIndex, selRight - used.columnIndex);
+      if (deletes.length === 0) {
+        showStatus("Nothing to join: no selected row has values only in the selected column.");
+        showError("");
+        return;
+      }
+
+      for (const w of writes) {
+        // Keep text like "= x" or "- item" from being read as a formula.
+        block.getCell(w.row, w.col).values = [[/^[=+\-@]/.test(w.text) ? "'" + w.text : w.text]];
+      }
+      const runs = [];
+      for (const r of deletes) {
+        const last = runs[runs.length - 1];
+        if (last && last.start + last.count === r) last.count++;
+        else runs.push({ start: r, count: 1 });
+      }
+      // Bottom-up, so each deletion leaves the rows above it where they were.
+      for (const run of runs.reverse()) {
+        sheet.getRangeByIndexes(first + run.start, 0, run.count, 1).getEntireRow().delete(Excel.DeleteShiftDirection.up);
+      }
+      await context.sync();
+
+      const joinedInto = new Set(writes.map((w) => w.row)).size;
+      showStatus("Joined " + plural(deletes.length, "row") + " into " + plural(joinedInto, "row") +
+        " at " + new Date().toLocaleTimeString());
+    });
+    showError("");
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+// values: whole rows of the sheet; columns selFrom..selTo are the selected column(s).
+// A row with values only in the selected columns is spill-over: its text is appended (space-separated)
+// to the nearest row above it, and the row is deleted. A completely blank row ends a record.
+// Returns the cells to rewrite and the row offsets to delete, top to bottom.
+function planJoin(values, selFrom, selTo) {
+  const isBlank = (v) => v === null || String(v).trim() === "";
+  const inSelection = (c) => c >= selFrom && c <= selTo;
+  const writes = new Map();
+  const deletes = [];
+  let anchor = -1;
+  values.forEach((row, r) => {
+    const insideBlank = row.every((v, c) => !inSelection(c) || isBlank(v));
+    const outsideBlank = row.every((v, c) => inSelection(c) || isBlank(v));
+    if (insideBlank && outsideBlank) {
+      anchor = -1;
+      return;
+    }
+    if (!outsideBlank || anchor < 0) {
+      anchor = r;
+      return;
+    }
+    for (let c = selFrom; c <= selTo; c++) {
+      if (isBlank(row[c])) continue;
+      const key = anchor + "," + c;
+      const base = writes.has(key) ? writes.get(key).text : String(values[anchor][c]).trim();
+      const piece = String(row[c]).trim();
+      writes.set(key, { row: anchor, col: c, text: base ? base + " " + piece : piece });
+    }
+    deletes.push(r);
+  });
+  return { writes: [...writes.values()], deletes };
+}
+
+function plural(n, word) {
+  return n + " " + word + (n === 1 ? "" : "s");
 }
 
 function buildPalettes() {
